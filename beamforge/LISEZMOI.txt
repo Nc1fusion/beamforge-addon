@@ -1,0 +1,14 @@
+beamforge - onglet BEAMFORGE pour BeamCutSoft (Visual Components 4.2)
+
+Installation : copier ce dossier « beamforge » dans
+   C:\Users\Public\Documents\BeamCut\BeamCutSoft\My Commands\
+puis redemarrer BeamCutSoft. Aucun fichier de Beamcut n'est modifie.
+
+Onglet BEAMFORGE :
+  Cellules : Ouvrir BC25 / Ouvrir BC50 (ouvre la cellule .vcmx choisie dans Options -
+             enregistrez votre travail avant : la cellule ouverte remplace la cellule en cours)
+  Reglages : Options (cellules .vcmx, machines a programmer, dossier des .LS)
+  Aide     : Diagnostic
+
+Messages : panneau Sortie. Journal detaille : journal.txt dans ce dossier.
+Desinstallation : supprimer ce dossier et redemarrer.

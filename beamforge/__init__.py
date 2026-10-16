@@ -29,7 +29,10 @@ except Exception:
     VERSION = '?'
 log('--- beamforge %s : chargement depuis %s (__file__ = %s)' % (VERSION, ICI, __file__))
 
-ONGLET = 'BEAMFORGE'                 # nom affiche = identifiant (constate en 4.2)
+# Doc officielle « Creating a Python Add-on » : un onglet se cree avec ControlType='RibbonTab' et son
+# identifiant DOIT contenir le mot 'Tab'. (Essai 9 : 'BeamforgeTabGroup' -> onglet visible ;
+# 1.1/1.2 : 'BEAMFORGE' sans 'Tab' -> rien.) Le nom affiche est l'identifiant, en majuscules.
+ONGLET = 'BeamforgeTab'
 REPLI = 'VcTabTeach/BEAMFORGE'       # groupe dans l'onglet PROGRAMME (forme documentee 'VcTabX/Groupe')
 COMMANDES = [   # (nom de commande, fichier, texte du bouton, groupe)
     ('BF_OuvrirBC25', 'BF_OuvrirBC25.py', u'Ouvrir BC25', 'Cellules'),
@@ -56,11 +59,16 @@ def _charger(nom, fichier):
 
 
 def _creer_onglet():
-    # Forme non documentee en 4.2 mais verifiee a l'atelier : cree un onglet nomme d'apres l'identifiant.
+    # Forme longue de la doc : addMenuItem("TabExample01", "", -1, "TabExample01", "", "", "", "RibbonTab")
     try:
-        addMenuItem(UxSite=ONGLET, UxName=u'BEAMFORGE', Index=-1, Id=ONGLET,
-                    Parent='gmAction', ControlType='ContextualTabGroup', BaseBackColor='#1985ff')
-        log('Onglet %s cree' % ONGLET)
+        r = addMenuItem(ONGLET, "", -1, ONGLET, "", "", "", "RibbonTab")
+        log('Onglet %s (RibbonTab) : %r' % (ONGLET, r))
+        return True
+    except Exception:
+        log_exc('Onglet (forme longue) refuse, essai forme courte')
+    try:
+        r = addMenuItem(UxSite=ONGLET, Index=-1, Id=ONGLET, ControlType='RibbonTab')
+        log('Onglet %s (RibbonTab, mots-cles) : %r' % (ONGLET, r))
         return True
     except Exception:
         log_exc('Onglet refuse : repli sur %s' % REPLI)

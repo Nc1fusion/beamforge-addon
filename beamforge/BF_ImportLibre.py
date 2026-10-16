@@ -43,10 +43,46 @@ def buttonPushed(arg):
         finally:
             _libre.desactiver(bavard=False)
             dire(u'Import libre termine. Restrictions Beamcut retablies.')
+            _bilan(dstvBuildSeq)
     else:
         LIB.gui.guiMessage('AzSimRobot', 'The provided information is not valid for generating the sequence').showError()
         OnStart()
     return
+
+
+def _compte(prg):
+    """(nb de routines, nb d'instructions de la routine principale) d'un programme robot."""
+    try:
+        return len(prg.Routines), len(prg.MainRoutine.Statements)
+    except Exception:
+        return '?', '?'
+
+
+def _bilan(seq):
+    """Diagnostic apres import : ou est le programme genere, et quelles erreurs Beamcut a notees."""
+    try:
+        for att in ('errProcessCode', 'errDstvNoSolutionFound', 'errDstvNotSupported', 'errDstvNotComplete',
+                    'errDstvFeatureNotSupported', 'errPartOutSideSystemSize', 'setSectionErrorProcess', 'errPlasma'):
+            v = getattr(seq, att, '')
+            if v and str(v).strip(' \\'):
+                dire(u'Bilan import libre - %s : %s' % (att, v))
+        mot = getattr(seq, 'motion', None)
+        prg = getattr(mot, 'rslPrg', None)
+        if prg is not None:
+            r, n = _compte(prg)
+            try:
+                nom = prg.Component.Name
+            except Exception:
+                nom = '?'
+            dire(u'Bilan import libre - programme ecrit par Beamcut : robot %s, %s routine(s), %s instruction(s) dans Main'
+                 % (nom, r, n))
+        for cmp in app.Components:
+            for b in cmp.findBehavioursByType(VC_ROBOTEXECUTOR):
+                r, n = _compte(b.Program)
+                dire(u'Bilan import libre - robot de la cellule %s : %s routine(s), %s instruction(s) dans Main'
+                     % (cmp.Name, r, n))
+    except Exception:
+        log_exc('Bilan import libre')
 
 
 def plasmaDataChange(arg):

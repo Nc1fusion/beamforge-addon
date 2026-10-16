@@ -12,6 +12,7 @@ cmd = getCommand()
 REGLAGES = [
     (u'Cellule BC25',        VC_URI,     'cellules', 'BC25', ''),
     (u'Cellule BC50',        VC_URI,     'cellules', 'BC50', ''),
+    (u'Vider la scene avant d ouvrir', VC_BOOLEAN, 'options', 'vider_scene', 'True'),
     (u'Programmer sur BC25', VC_BOOLEAN, 'options',  'programmer_BC25', 'True'),
     (u'Programmer sur BC50', VC_BOOLEAN, 'options',  'programmer_BC50', 'True'),
     (u'Dossier des .LS',     VC_STRING,  'sortie',   'dossier', ''),

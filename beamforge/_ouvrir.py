@@ -26,6 +26,19 @@ def ouvrir(app, machine):
     if cmd is None:
         dire(u"Commande loadLayout introuvable : ouverture impossible.")
         return
+    if cfg('options', 'vider_scene', 'True') == 'True':
+        # Commande integree de la 4.2 (api.xml) : equivalent de « Nouveau » (devrait proposer d'enregistrer).
+        vider = app.findCommand('interactiveClearWorld')
+        if vider is None:
+            dire(u"Commande interactiveClearWorld introuvable : la cellule sera ajoutee a la scene.")
+        else:
+            try:
+                vider.execute()
+                log('interactiveClearWorld execute')
+            except Exception:
+                log_exc('interactiveClearWorld')
+                dire(u"Impossible de vider la scene : ouverture annulee (voir journal.txt).")
+                return
     dire(u"Ouverture de la cellule %s : %s" % (machine, chemin))
     try:
         cmd.execute(vers_uri(chemin))

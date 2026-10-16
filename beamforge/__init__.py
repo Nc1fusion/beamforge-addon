@@ -5,15 +5,29 @@
 from vcApplication import *
 import os, sys
 
-ICI = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, ICI)
-from _bf import log, log_exc, vers_uri
+import urllib
+
+
+def _dossier_init():
+    """BeamCutSoft passe __file__ sous la forme 'file:C:/.../My+Commands/beamforge/__init__.py'
+    (constate a l'atelier) : on retire 'file:' et on decode les '+' et '%20'."""
+    f = __file__
+    for prefixe in ('file:///', 'file://', 'file:'):
+        if f.lower().startswith(prefixe):
+            f = f[len(prefixe):]
+            break
+    f = urllib.unquote_plus(f).replace('/', os.sep)
+    return os.path.dirname(f)
+
+
+sys.path.insert(0, _dossier_init())
+from _bf import ICI, log, log_exc, vers_uri     # ICI de _bf = vrai dossier (verifie : journal.txt y est ecrit)
 
 try:
     VERSION = open(os.path.join(ICI, 'VERSION.txt')).read().strip()
 except Exception:
     VERSION = '?'
-log('--- beamforge %s : chargement depuis %s' % (VERSION, ICI))
+log('--- beamforge %s : chargement depuis %s (__file__ = %s)' % (VERSION, ICI, __file__))
 
 ONGLET = 'BEAMFORGE'                 # nom affiche = identifiant (constate en 4.2)
 REPLI = 'VcTabTeach/BEAMFORGE'       # groupe dans l'onglet PROGRAMME (forme documentee 'VcTabX/Groupe')

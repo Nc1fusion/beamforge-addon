@@ -1,8 +1,19 @@
 # -*- coding: utf-8 -*-
 # beamforge - outils communs (Python 2.7 de BeamCutSoft / Visual Components 4.2)
-import os, datetime, traceback, ConfigParser
+import os, datetime, traceback, ConfigParser, urllib
 
-ICI = os.path.dirname(os.path.abspath(__file__))
+
+def _dossier(fichier):
+    """Dossier d'un fichier, meme si BeamCutSoft le donne sous la forme 'file:C:/.../My+Commands/...'."""
+    f = fichier
+    for prefixe in ('file:///', 'file://', 'file:'):
+        if f.lower().startswith(prefixe):
+            f = urllib.unquote_plus(f[len(prefixe):])
+            break
+    return os.path.dirname(os.path.abspath(f.replace('/', os.sep)))
+
+
+ICI = _dossier(__file__)
 JOURNAL = os.path.join(ICI, 'journal.txt')
 CONFIG = os.path.join(ICI, 'config.ini')
 

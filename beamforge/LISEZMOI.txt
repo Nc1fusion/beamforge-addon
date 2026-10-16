@@ -10,8 +10,12 @@ Onglet BEAMFORGE :
   Import   : Importer DSTV libre : meme panneau que « Importer DSTV (*.nc1) » de Beamcut,
              mais importe le .nc1 sans les restrictions de Beamcut (seulement pour cet
              import ; l'Importer DSTV normal reste inchange) : zones de securite, rognage
-             des SI/KO/IK et collisions ne bloquent plus et ne modifient plus la piece
-             (la retouche des chanfreins de soudure reste faite par Beamcut). Les limites physiques (hauteur, largeur, dessous de
+             des SI/KO/IK, raccord ame / ailes des coupes d'extremite (« Cut on faces are
+             not aligned » : coupes faites separement, telles que dessinees) et collisions
+             du robot AVEC LA PIECE ne bloquent plus et ne modifient plus la piece.
+             Les collisions avec la machine (supports, serre-pieces) restent gerees par
+             Beamcut, qui deplace la poutre pour les eviter. La retouche des chanfreins de
+             soudure reste faite par Beamcut. Les limites physiques (hauteur, largeur, dessous de
              poutre, axes, portee) restent verifiees. Tout ce qui est ignore est liste dans
              le panneau Sortie et dans journal.txt ; le programme porte la remarque
              « MODE LIBRE - SANS RESTRICTION ». Verifier en simulation, corriger les

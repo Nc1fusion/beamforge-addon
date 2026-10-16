@@ -4,8 +4,12 @@
 # Ce que le mode libre change (uniquement pendant qu'il est actif, en memoire, aucun fichier
 # de Beamcut Soft n'est modifie) :
 #   A. refus     : zones de securite (30/60 mm des ailes, 250/381 mm sous une poutre en I, trop
-#                  pres des bouts) ignorees sans question ; collisions du test de mouvement
-#                  notees au journal au lieu de refuser la zone.
+#                  pres des bouts) ignorees sans question ; raccord ame / ailes des coupes
+#                  d'extremite (« Cut on faces are not aligned ») : les coupes non raccordees sont
+#                  faites separement, telles que dessinees ; collisions du robot AVEC LA PIECE
+#                  notees au journal au lieu de refuser la zone. (1.9 : les collisions avec la
+#                  machine - supports, serre-pieces - restent gerees par Beamcut, qui deplace la
+#                  poutre pour les eviter ; en 1.8 elles etaient ignorees : constate a l'atelier.)
 #   B. rognages  : SI / KO / IK gardes exactement comme dessines (plus de rognage dans la zone
 #                  permise).
 # Garde tel quel (C) : hauteur / largeur maxi, « Cannot go underneath », limites d'axes,
@@ -31,6 +35,7 @@ EMPREINTES = {
     ('mainProcess_Def', 'processSectionsV2'): 97336939,
     ('processSI_BO_IK_KO_Def', 'adjustInXYMaterial'): 648648659,
     ('motionStmtDef', 'checkIfErrorsInRoutine'): 1875956449,
+    ('setSections_def', 'checkIfAllAKConnectionDone'): 946646471,
 }
 # controles de profil appeles par isFeatureOk (constante de profil -> methode)
 CONTROLES_PROFIL = [('CHANNEL', 'isFeatureOkCHANNEL'), ('LANGLE', 'isFeatureOkLANGLE'),
@@ -38,7 +43,7 @@ CONTROLES_PROFIL = [('CHANNEL', 'isFeatureOkCHANNEL'), ('LANGLE', 'isFeatureOkLA
                     ('TUBE', 'isFeatureOkHSS'), ('HBEAM', 'isFeatureOkHBeam')]
 REFUS_GARDES = ['Cannot go underneath']        # restrictions physiques (C) conservees
 
-_etat = {'actif': False, 'originaux': {}, 'module': None, 'reload': None}
+_etat = {'actif': False, 'originaux': {}, 'module': None, 'reload': None, 'piece': None}
 _rapport = {'fichier': '', 'items': []}
 
 
@@ -145,6 +150,19 @@ def _adjustInXYMaterial(orig):
     return adjustInXYMaterial
 
 
+def _noms(noeud, profondeur=12):
+    """Noms du noeud touche et de ses parents (la piece peut etre touchee par un sous-noeud)."""
+    noms = []
+    while noeud is not None and profondeur > 0:
+        try:
+            noms.append(noeud.Name)
+            noeud = noeud.Parent
+        except Exception:
+            break
+        profondeur -= 1
+    return noms
+
+
 class _DetecteurEspion(object):
     """Enveloppe un détecteur de collision : la collision est notée, mais ne bloque plus."""
 
@@ -153,18 +171,25 @@ class _DetecteurEspion(object):
 
     def testOneCollision(self, *args, **kw):
         reel = object.__getattribute__(self, '_reel')
-        if reel.testOneCollision(*args, **kw):
-            routine = point = '?'
-            try:
-                loc = sys._getframe(1).f_locals
-                routine, point = loc.get('routineName', '?'), loc.get('stmtName', '?')
-            except Exception:
-                pass
-            try:
-                a, b = reel.getHitNodeA(0).Name, reel.getHitNodeB(0).Name
-            except Exception:
-                a = b = '?'
-            _note(u'COLLISION %s / %s : %s contre %s' % (routine, point, a, b))
+        if not reel.testOneCollision(*args, **kw):
+            return False
+        try:
+            na, nb = reel.getHitNodeA(0), reel.getHitNodeB(0)
+            a, b = na.Name, nb.Name
+            piece = _etat['piece']
+            avec_piece = piece is not None and (piece in _noms(na) or piece in _noms(nb))
+        except Exception:
+            a = b = '?'
+            avec_piece = False
+        if not avec_piece:
+            return True          # collision avec la machine : Beamcut cherche une autre position
+        routine = point = '?'
+        try:
+            loc = sys._getframe(1).f_locals
+            routine, point = loc.get('routineName', '?'), loc.get('stmtName', '?')
+        except Exception:
+            pass
+        _note(u'COLLISION avec la piece %s / %s : %s contre %s' % (routine, point, a, b))
         return False
 
     def __getattr__(self, nom):
@@ -189,7 +214,16 @@ def _checkIfErrorsInRoutine(orig):
 
 def _processSectionsV2(orig):
     def processSectionsV2(self):
-        r = orig(self)
+        try:
+            cmp = getattr(self, 'beamBuilded', None) or self.beamDef.cmp
+            _etat['piece'] = cmp.Name
+        except Exception:
+            _etat['piece'] = None
+            log_exc('MODE LIBRE : nom de la piece')
+        try:
+            r = orig(self)
+        finally:
+            _etat['piece'] = None
         try:
             prg = self.motion.rslPrg
             import LIB.rslProgram
@@ -201,11 +235,22 @@ def _processSectionsV2(orig):
     return processSectionsV2
 
 
+def _checkIfAllAKConnectionDone(orig):
+    def checkIfAllAKConnectionDone(self):
+        restes = [k for k, v in getattr(self, 'AK_ConnectionMatch', {}).items() if v > 0]
+        if restes:
+            _note(u'Coupes d\'extremite non raccordees (%s) : ame et ailes coupees separement, '
+                  u'telles que dessinees - verifier la jonction' % ', '.join(sorted(str(k) for k in restes)))
+        return None
+    return checkIfAllAKConnectionDone
+
+
 REMPLACEMENTS = {
     ('mainProcess_Def', 'isFeatureOk'): _isFeatureOk,
     ('mainProcess_Def', 'processSectionsV2'): _processSectionsV2,
     ('processSI_BO_IK_KO_Def', 'adjustInXYMaterial'): _adjustInXYMaterial,
     ('motionStmtDef', 'checkIfErrorsInRoutine'): _checkIfErrorsInRoutine,
+    ('setSections_def', 'checkIfAllAKConnectionDone'): _checkIfAllAKConnectionDone,
 }
 
 
@@ -301,7 +346,7 @@ def activer(mod=None, empreintes=EMPREINTES, racine=MY_COMMANDS, surveiller_relo
     if not bavard:
         log('MODE LIBRE active')
         return True
-    dire(u'*** MODE LIBRE ACTIVE *** zones de securite, rognages et collisions ne sont plus '
+    dire(u'*** MODE LIBRE ACTIVE *** zones de securite, rognages, raccords et collisions avec la piece ne sont plus '
          u'verifies. Limites physiques conservees. Desactive au prochain demarrage.')
     return True
 

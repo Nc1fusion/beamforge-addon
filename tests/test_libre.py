@@ -42,6 +42,7 @@ def fabriquer_beamcut():
         def __init__(self, msg='IK Definition too close to inside flange of the CHANNEL'):
             self.beamDef = Beam(); self.filePath = 'C:/x/piece.nc1'; self.msg = msg
             self.doHolesDrillOnly = False; self.trous = 0
+            self.beamBuilded = types.SimpleNamespace(Name='PIECE')
             self.motion = types.SimpleNamespace(rslPrg=types.SimpleNamespace(MainRoutine='MAIN'))
 
         def chkHoleDiamRatioThick(self, folderProcess=False):
@@ -64,28 +65,36 @@ def fabriquer_beamcut():
             return [v for v in workList if 30 <= v.Y <= 270]      # rognage dans la zone permise
 
     class setSections_def(object):
-        def __init__(self):
-            self.modifie = False
+        def __init__(self, restes=0):
+            self.modifie = False; self.errorProcess = ''
+            self.AK_ConnectionMatch = {'vo': restes, 'ov': 0}
+
+        def checkIfAllAKConnectionDone(self):
+            for v in self.AK_ConnectionMatch.values():
+                if v > 0:
+                    self.errorProcess = 'Cut on faces are not aligned'
 
         def removeUnCompleteWeldPrep3(self):
             self.modifie = True
 
     class Coll(object):
-        def __init__(self, touche):
-            self.touche = touche; self.Enabled = False
+        def __init__(self, touche, contre='piece'):
+            self.touche = touche; self.Enabled = False; self.contre = contre
 
         def testOneCollision(self, tol):
             return self.touche
 
         def getHitNodeA(self, i):
-            return types.SimpleNamespace(Name='Torche')
+            return types.SimpleNamespace(Name='PlasmaGun#4', Parent=None)
 
         def getHitNodeB(self, i):
-            return types.SimpleNamespace(Name='Aile')
+            if self.contre == 'piece':        # sous-noeud de la piece
+                return types.SimpleNamespace(Name='Aile', Parent=types.SimpleNamespace(Name='PIECE', Parent=None))
+            return types.SimpleNamespace(Name='BeamHolding', Parent=None)
 
     class motionStmtDef(object):
-        def __init__(self, axes_ok=True):
-            self.lLayoutColl = [Coll(False), Coll(True)]; self.axes_ok = axes_ok
+        def __init__(self, axes_ok=True, contre='piece'):
+            self.lLayoutColl = [Coll(False), Coll(True, contre)]; self.axes_ok = axes_ok
 
         def checkIfErrorsInRoutine(self, routine):
             if routine == 'PARENT':
@@ -149,13 +158,34 @@ def test_chanfreins_laisses_a_beamcut():
     assert s.modifie is True
 
 
-def test_collision_notee_mais_axes_gardes():
+def test_collision_avec_la_piece_notee_mais_axes_gardes():
     m = nouveau()
-    mo = m.motionStmtDef()
-    assert mo.checkIfErrorsInRoutine('PARENT') is False
-    assert all(type(c).__name__ == 'Coll' for c in mo.lLayoutColl)   # détecteurs rendus
-    assert any('COLLISION PARENT / P12 : Torche contre Aile' in t for t in _libre._rapport['items'])
-    assert m.motionStmtDef(axes_ok=False).checkIfErrorsInRoutine('Z1') is True
+    _libre._etat['piece'] = 'PIECE'
+    try:
+        mo = m.motionStmtDef()
+        assert mo.checkIfErrorsInRoutine('PARENT') is False
+        assert all(type(c).__name__ == 'Coll' for c in mo.lLayoutColl)   # détecteurs rendus
+        assert any('COLLISION avec la piece PARENT / P12 : PlasmaGun#4 contre Aile' in t
+                   for t in _libre._rapport['items'])
+        assert m.motionStmtDef(axes_ok=False).checkIfErrorsInRoutine('Z1') is True
+    finally:
+        _libre._etat['piece'] = None
+
+
+def test_collision_avec_la_machine_gardee():
+    m = nouveau()
+    _libre._etat['piece'] = 'PIECE'
+    try:
+        assert m.motionStmtDef(contre='machine').checkIfErrorsInRoutine('Z1') is True
+    finally:
+        _libre._etat['piece'] = None
+    assert m.motionStmtDef().checkIfErrorsInRoutine('Z1') is True      # pièce inconnue : prudence
+
+
+def test_raccord_des_faces_ignore():
+    m = nouveau()
+    s = m.setSections_def(restes=1); s.checkIfAllAKConnectionDone()
+    assert s.errorProcess == '' and any('non raccordees' in t for t in _libre._rapport['items'])
 
 
 def test_marque_et_resume():

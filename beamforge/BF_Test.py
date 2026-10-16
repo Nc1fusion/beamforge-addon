@@ -18,12 +18,9 @@ def etat_principal():
     dire(u"beamforge %s fonctionne. Journal : %s" % (v, JOURNAL))
     try:
         import _libre
-        if _libre.actif():
-            dire(u"Mode libre : ACTIF (restrictions Beamcut desactivees)")
-        else:
-            pb = _libre.verifier(_libre._module())
-            dire(u"Mode libre : inactif ; compatible avec cette version de Beamcut : %s"
-                 % (u'oui' if not pb else u'NON (' + u'; '.join(pb) + u')'))
+        pb = _libre.verifier(_libre._module(), racine=None)
+        dire(u"Importer DSTV libre : compatible avec cette version de Beamcut : %s"
+             % (u'oui' if not pb else u'NON (' + u'; '.join(pb) + u')'))
     except Exception:
         log('Diagnostic mode libre impossible')
     cmd.setNextState(None)

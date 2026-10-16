@@ -7,8 +7,9 @@ puis redemarrer BeamCutSoft. Aucun fichier de Beamcut n'est modifie.
 Onglet BEAMFORGE :
   Cellules : Ouvrir BC25 / Ouvrir BC50 (ouvre la cellule .vcmx choisie dans Options -
              enregistrez votre travail avant : la cellule ouverte remplace la cellule en cours)
-  Import   : Mode libre (clic = active / desactive ; toujours desactive au demarrage)
-             Importe le .nc1 sans les restrictions de Beamcut : zones de securite, rognage
+  Import   : Importer DSTV libre : meme panneau que « Importer DSTV (*.nc1) » de Beamcut,
+             mais importe le .nc1 sans les restrictions de Beamcut (seulement pour cet
+             import ; l'Importer DSTV normal reste inchange) : zones de securite, rognage
              des SI/KO/IK, modification des chanfreins et collisions ne bloquent plus et ne
              modifient plus la piece. Les limites physiques (hauteur, largeur, dessous de
              poutre, axes, portee) restent verifiees. Tout ce qui est ignore est liste dans
@@ -16,7 +17,7 @@ Onglet BEAMFORGE :
              « MODE LIBRE - SANS RESTRICTION ». Verifier en simulation, corriger les
              collisions a la main, essai a vide avant la coupe.
              Valide pour BeamCutSoft 20260930-develop[b02f54a] : refuse de s'activer si
-             Beamcut a change (voir Diagnostic).
+             Beamcut a change (voir Diagnostic). Cellule (BC25/BC50) a ouvrir avant.
   Reglages : Options (cellules .vcmx, machines a programmer, dossier des .LS)
   Aide     : Diagnostic
 

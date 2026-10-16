@@ -215,6 +215,26 @@ def test_commandes_utilisent_dstvProcess():
     assert _libre._commandes_utilisent_module(d)[0] is False
 
 
+
+def test_import_libre_le_temps_d_un_import():
+    """Comme BF_ImportLibre : activé juste avant workOnDstvFiles, retiré juste après."""
+    if _libre.actif():
+        _libre.desactiver()
+    m = fabriquer_beamcut()
+    p = m.mainProcess_Def()                         # créé avant (ouverture du panneau)
+    _libre._etat['reload'] = None
+    assert _libre.activer(m, SANS_EMPREINTE, racine=None, surveiller_reload=False, bavard=False)
+    assert _libre._etat['reload'] is None
+    try:
+        assert p.isFeatureOk() is True              # instance existante : remplacement visible
+    finally:
+        _libre.desactiver(bavard=False)
+    try:
+        p.isFeatureOk(); assert False
+    except AssertionError as e:
+        assert 'question' in str(e)                 # Beamcut normal rétabli
+
+
 if __name__ == '__main__':
     for n, f in list(globals().items()):
         if n.startswith('test_'):

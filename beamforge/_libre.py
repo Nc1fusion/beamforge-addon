@@ -286,33 +286,38 @@ def _installer_reload():
     _etat['reload'] = orig
 
 
-def activer(mod=None, empreintes=EMPREINTES, racine=MY_COMMANDS):
+def activer(mod=None, empreintes=EMPREINTES, racine=MY_COMMANDS, surveiller_reload=True, bavard=True):
     if _etat['actif']:
         return True
     try:
         mod = mod or _module()
+        log('MODE LIBRE : module %s id=%s fichier=%s' % (MODULE, id(mod), getattr(mod, '__file__', '?')))
         pb = verifier(mod, empreintes, racine)
         if pb:
             dire(u'MODE LIBRE REFUSE : %s' % u'; '.join(pb))
             return False
         _appliquer(mod)
-        _installer_reload()
+        if surveiller_reload:
+            _installer_reload()
         _etat['actif'] = True
     except Exception:
         log_exc('MODE LIBRE : activation')
         _retirer()
         dire(u'MODE LIBRE : echec de l\'activation (voir journal.txt)')
         return False
+    if not bavard:
+        log('MODE LIBRE active')
+        return True
     dire(u'*** MODE LIBRE ACTIVE *** zones de securite, rognages, chanfreins et collisions ne sont plus '
          u'verifies. Limites physiques conservees. Desactive au prochain demarrage.')
     return True
 
 
-def desactiver():
+def desactiver(bavard=True):
     _retirer()
     _etat['actif'] = False
     _etat['module'] = None
-    dire(u'Mode libre desactive : Beamcut Soft fonctionne normalement.')
+    (dire if bavard else log)(u'Mode libre desactive : Beamcut Soft fonctionne normalement.')
 
 
 def basculer():

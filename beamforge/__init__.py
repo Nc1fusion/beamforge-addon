@@ -37,7 +37,7 @@ REPLI = 'VcTabTeach/BEAMFORGE'       # groupe dans l'onglet PROGRAMME (forme doc
 COMMANDES = [   # (nom de commande, fichier, texte du bouton, groupe)
     ('BF_OuvrirBC25', 'BF_OuvrirBC25.py', u'Ouvrir BC25', 'Cellules'),
     ('BF_OuvrirBC50', 'BF_OuvrirBC50.py', u'Ouvrir BC50', 'Cellules'),
-    ('BF_ModeLibre',  'BF_ModeLibre.py',  u'Mode libre',  'Import'),
+    ('BF_ImportLibre', 'BF_ImportLibre.py', u'Importer DSTV libre', 'Import'),
     ('BF_Options',    'BF_Options.py',    u'Options',     'Reglages'),
     ('BF_Test',       'BF_Test.py',       u'Diagnostic',  'Aide'),
 ]

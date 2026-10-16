@@ -143,10 +143,10 @@ def test_rognage_neutralise():
     assert all(a is not b for a, b in zip(res, pts))           # copies, comme Beamcut
 
 
-def test_chanfreins_non_modifies():
-    m = nouveau()
+def test_chanfreins_laisses_a_beamcut():
+    m = nouveau()                         # 1.7 : retouche des chanfreins nécessaire au raccord des faces
     s = m.setSections_def(); s.removeUnCompleteWeldPrep3()
-    assert s.modifie is False
+    assert s.modifie is True
 
 
 def test_collision_notee_mais_axes_gardes():
@@ -174,8 +174,6 @@ def test_desactivation_restaure_beamcut():
         assert False, 'la fonction originale aurait dû être rendue'
     except AssertionError as e:
         assert 'question' in str(e)
-    assert m.setSections_def.removeUnCompleteWeldPrep3.__name__ == 'removeUnCompleteWeldPrep3'
-    s = m.setSections_def(); s.removeUnCompleteWeldPrep3(); assert s.modifie
 
 
 def test_empreinte_differente_refusee():

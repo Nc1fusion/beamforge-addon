@@ -7,10 +7,12 @@
 #                  pres des bouts) ignorees sans question ; collisions du test de mouvement
 #                  notees au journal au lieu de refuser la zone.
 #   B. rognages  : SI / KO / IK gardes exactement comme dessines (plus de rognage dans la zone
-#                  permise) ; chanfreins de soudure (AK) des poutres en I / HSS / Te non modifies.
+#                  permise).
 # Garde tel quel (C) : hauteur / largeur maxi, « Cannot go underneath », limites d'axes,
 #                  singularites, portee du robot, rapport trou / epaisseur, inclinaison de la
-#                  torche pres des ailes.
+#                  torche pres des ailes, retouche des chanfreins de soudure AK (1.7 : sans elle,
+#                  le raccord ame / ailes echoue - « Cut on faces are not aligned » - et aucun
+#                  programme n'est genere, constate a l'atelier en 1.6).
 #
 # Ecrit pour BeamCutSoft 20260930-develop[b02f54a] : chaque fonction remplacee est verifiee par
 # empreinte de son bytecode ; si Beamcut a change, le mode libre refuse de s'activer.
@@ -28,7 +30,6 @@ EMPREINTES = {
     ('mainProcess_Def', 'isFeatureOk'): 2616169431,
     ('mainProcess_Def', 'processSectionsV2'): 97336939,
     ('processSI_BO_IK_KO_Def', 'adjustInXYMaterial'): 648648659,
-    ('setSections_def', 'removeUnCompleteWeldPrep3'): 3454293735,
     ('motionStmtDef', 'checkIfErrorsInRoutine'): 1875956449,
 }
 # controles de profil appeles par isFeatureOk (constante de profil -> methode)
@@ -144,13 +145,6 @@ def _adjustInXYMaterial(orig):
     return adjustInXYMaterial
 
 
-def _removeUnCompleteWeldPrep3(orig):
-    def removeUnCompleteWeldPrep3(self):
-        _note(u'Chanfreins de soudure (AK) non modifies')
-        return None
-    return removeUnCompleteWeldPrep3
-
-
 class _DetecteurEspion(object):
     """Enveloppe un détecteur de collision : la collision est notée, mais ne bloque plus."""
 
@@ -211,7 +205,6 @@ REMPLACEMENTS = {
     ('mainProcess_Def', 'isFeatureOk'): _isFeatureOk,
     ('mainProcess_Def', 'processSectionsV2'): _processSectionsV2,
     ('processSI_BO_IK_KO_Def', 'adjustInXYMaterial'): _adjustInXYMaterial,
-    ('setSections_def', 'removeUnCompleteWeldPrep3'): _removeUnCompleteWeldPrep3,
     ('motionStmtDef', 'checkIfErrorsInRoutine'): _checkIfErrorsInRoutine,
 }
 
@@ -308,7 +301,7 @@ def activer(mod=None, empreintes=EMPREINTES, racine=MY_COMMANDS, surveiller_relo
     if not bavard:
         log('MODE LIBRE active')
         return True
-    dire(u'*** MODE LIBRE ACTIVE *** zones de securite, rognages, chanfreins et collisions ne sont plus '
+    dire(u'*** MODE LIBRE ACTIVE *** zones de securite, rognages et collisions ne sont plus '
          u'verifies. Limites physiques conservees. Desactive au prochain demarrage.')
     return True
 

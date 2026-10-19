@@ -9,10 +9,15 @@ from vcCommand import *
 from vcHelpers.Application import *
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from _bf import log_exc, dire
+from _bf import log, log_exc, dire
 import _libre
 import LIB.gui, LIB.propName, LIB.dstvProcess
 import LIB.libPlasma
+
+# Maximums des champs « Cut Flush » dans ce panneau (Beamcut : 35 / 35 / 750 mm, limite du panneau
+# seulement - le calcul utilise la valeur telle quelle). 1000 mm couvre toute hauteur de poutre des
+# cellules ; au-dela de la moitie de la hauteur d'ame, les bandes du bas et du haut se chevauchent.
+MAX_CUT_FLUSH = [('USERMINFLUSHLIMIT', 1000.0), ('USERMAXFLUSHLIMIT', 1000.0), ('USERDISTOFFSETFLANGECUT', 3000)]
 
 myCmd = getCommand()
 app = getApplication()
@@ -85,6 +90,19 @@ def _bilan(seq):
         log_exc('Bilan import libre')
 
 
+def _agrandir_cut_flush():
+    """Releve le maximum des champs Cut Flush (presents seulement si la machine a l'option)."""
+    for attr, maxi in MAX_CUT_FLUSH:
+        try:
+            nom = getattr(dstvBuildSeq, attr, None)
+            p = myCmd.getProperty(nom) if nom else None
+            if p is not None:
+                p.MaxValue = maxi
+                log('Import libre : %s -> maximum %s' % (nom, maxi))
+        except Exception:
+            log_exc('Maximum Cut Flush %s' % attr)
+
+
 def plasmaDataChange(arg):
     myCmd = getCommand()
     plasmaDef.updateUserProperties(myCmd.getProperty(plasmaDef.USERCURRENT), myCmd.getProperty(plasmaDef.USERCONSUMABLEANG),
@@ -129,6 +147,7 @@ def OnStart():
             lPlasmaProp = []
             plasmaDef.userSetPlasmaPrm(myCmd, lPlasmaProp, plasmaDataChange)
             dstvBuildSeq.infoFromUser(myCmd)
+            _agrandir_cut_flush()
             addOkButton()
             executeInActionPanel()
     except Exception:

@@ -40,6 +40,7 @@ COMMANDES = [   # (nom de commande, fichier, texte du bouton, groupe)
     ('BF_ImportLibre', 'BF_ImportLibre.py', u'Importer DSTV libre', 'Import'),
     ('BF_Options',    'BF_Options.py',    u'Options',     'Reglages'),
     ('BF_Test',       'BF_Test.py',       u'Diagnostic',  'Aide'),
+    ('BF_Journal',    'BF_Journal.py',    u'Envoyer journal', 'Aide'),
 ]
 
 

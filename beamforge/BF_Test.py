@@ -16,6 +16,13 @@ def etat_principal():
     except Exception:
         v = '?'
     dire(u"beamforge %s fonctionne. Journal : %s" % (v, JOURNAL))
+    try:
+        import _libre
+        pb = _libre.verifier(_libre._module(), racine=None)
+        dire(u"Importer DSTV libre : compatible avec cette version de Beamcut : %s"
+             % (u'oui' if not pb else u'NON (' + u'; '.join(pb) + u')'))
+    except Exception:
+        log('Diagnostic mode libre impossible')
     cmd.setNextState(None)
 
 
